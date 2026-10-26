@@ -1,0 +1,32 @@
+name: Step 1 - fetch VC++ runtime
+
+# Downloads Microsoft's official VC_redist.x64.exe at build time, extracts the
+# 14 runtime DLLs unmodified, verifies them, and uploads them as a workflow
+# artifact. Nothing is committed to the repo (they are git-ignored on purpose).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vcruntime:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        # No submodules needed for this step.
+
+      - name: Install 7-Zip
+        run: brew install sevenzip
+
+      - name: Fetch and verify the VC++ runtime DLLs
+        run: |
+          chmod +x tools/fetch-vcruntime.sh
+          ./tools/fetch-vcruntime.sh
+
+      - name: List result
+        run: ls -l app/Madeira/x86_64-vcruntime/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: x86_64-vcruntime
+          path: app/Madeira/x86_64-vcruntime/*.dll
+          if-no-files-found: error
